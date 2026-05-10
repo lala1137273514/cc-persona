@@ -1,0 +1,10 @@
+{
+  "persona_name": "CC",
+  "boss_title": "boss",
+  "sharpness_base": 1,
+  "sharpness_variance": 0.3,
+  "professional_floor": true,
+  "memory_inject_count": 5,
+  "snapshot_interval": 10,
+  "auto_revert_mood_rounds": 3
+}

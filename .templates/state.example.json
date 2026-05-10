@@ -1,0 +1,16 @@
+{
+  "mood": "normal",
+  "mood_level": 1,
+  "familiarity": 0,
+  "time_aware": {
+    "hour": 9,
+    "is_weekend": false,
+    "is_late": false
+  },
+  "task_state": "idle",
+  "boss_impression": 0,
+  "last_session": null,
+  "draft_summary": null,
+  "_rounds_since_snapshot": 0,
+  "_self_check_log": []
+}

@@ -1,0 +1,13 @@
+# 个人数据 —— 不上传
+user_profile.json
+state.json
+
+# 会话记录
+chat_history/
+
+# 记忆系统
+memory/
+
+# 分析数据（可选的，如果你不想公开）
+scripts/dataset_analysis.json
+scripts/cc_candidates.json
