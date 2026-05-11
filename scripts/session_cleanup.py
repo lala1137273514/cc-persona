@@ -1,18 +1,30 @@
 #!/usr/bin/env python3
 """CC 会话结束时的记忆收尾脚本。
+
 由 Stop hook 触发，将 draft_summary 收尾为正式摘要。
 """
+
+from __future__ import annotations
+
 import json
 import os
-import sys
 import traceback
 from datetime import datetime
 from pathlib import Path
 
-SKILL_DIR = Path(os.path.expanduser("~/.claude/skills/cc-persona"))
-STATE_FILE = SKILL_DIR / "state.json"
-MEMORY_DIR = SKILL_DIR / "memory" / "summaries"
-INDEX_FILE = SKILL_DIR / "memory" / "session_index.md"
+ENV_SKILL_DIR = "CC_PERSONA_SKILL_DIR"
+
+
+def resolve_skill_dir(skill_dir=None):
+    """Return the skill directory without relying on a machine-specific path."""
+    if skill_dir is not None:
+        return Path(skill_dir).expanduser().resolve()
+
+    env_dir = os.environ.get(ENV_SKILL_DIR)
+    if env_dir:
+        return Path(env_dir).expanduser().resolve()
+
+    return Path(__file__).resolve().parents[1]
 
 
 def build_summary_from_string(draft, session_id, now, state):
@@ -44,17 +56,53 @@ def parse_draft(draft, session_id, now, state):
     return None
 
 
-def main():
+def append_index_entry(index_file, index_entry):
+    if index_file.exists():
+        content = index_file.read_text(encoding="utf-8")
+        lines = content.split("\n")
+        insert_pos = 0
+        found_separator = False
+        for i, line in enumerate(lines):
+            if line.strip() == "---":
+                found_separator = True
+                continue
+            if found_separator and line.strip() == "":
+                insert_pos = i + 1
+                break
+        if insert_pos == 0:
+            insert_pos = len(lines)
+        lines.insert(insert_pos, index_entry)
+        index_file.write_text("\n".join(lines), encoding="utf-8")
+        return
+
+    index_file.parent.mkdir(parents=True, exist_ok=True)
+    index_file.write_text(
+        "# CC 会话记忆索引\n\n"
+        "> 按时间倒序排列。每次会话结束后自动追加条目。\n"
+        "> CC 启动时读取最近 5 条作为背景记忆注入。\n\n"
+        "---\n\n"
+        f"{index_entry}\n"
+        "---\n",
+        encoding="utf-8",
+    )
+
+
+def main(skill_dir=None, now=None):
+    skill_dir = resolve_skill_dir(skill_dir)
+    state_file = skill_dir / "state.json"
+    memory_dir = skill_dir / "memory" / "summaries"
+    index_file = skill_dir / "memory" / "session_index.md"
+
     try:
-        if not STATE_FILE.exists():
+        if not state_file.exists():
             return
 
-        state = json.loads(STATE_FILE.read_text(encoding="utf-8"))
+        state = json.loads(state_file.read_text(encoding="utf-8-sig"))
         draft = state.get("draft_summary")
         if not draft:
             return
 
-        now = datetime.now()
+        now = now or datetime.now()
         session_id = now.strftime("%Y%m%d_%H%M%S")
 
         info = parse_draft(draft, session_id, now, state)
@@ -94,8 +142,8 @@ created: "{now.strftime('%Y-%m-%d %H:%M')}"
 """
 
         # 确保目录存在
-        MEMORY_DIR.mkdir(parents=True, exist_ok=True)
-        summary_file = MEMORY_DIR / f"session_{session_id}.md"
+        memory_dir.mkdir(parents=True, exist_ok=True)
+        summary_file = memory_dir / f"session_{session_id}.md"
         summary_file.write_text(summary, encoding="utf-8")
 
         # 更新索引
@@ -105,43 +153,19 @@ created: "{now.strftime('%Y-%m-%d %H:%M')}"
             f" | {info['topics'][:60]}{'...' if len(info['topics']) > 60 else ''}\n"
         )
 
-        if INDEX_FILE.exists():
-            content = INDEX_FILE.read_text(encoding="utf-8")
-            lines = content.split("\n")
-            insert_pos = 0
-            found_separator = False
-            for i, line in enumerate(lines):
-                if line.strip() == "---":
-                    found_separator = True
-                    continue
-                if found_separator and line.strip() == "":
-                    insert_pos = i + 1
-                    break
-            if insert_pos == 0:
-                insert_pos = len(lines)
-            lines.insert(insert_pos, index_entry)
-            INDEX_FILE.write_text("\n".join(lines), encoding="utf-8")
-        else:
-            INDEX_FILE.write_text(
-                "# CC 会话记忆索引\n\n"
-                "> 按时间倒序排列。每次会话结束后自动追加条目。\n"
-                "> CC 启动时读取最近 5 条作为背景记忆注入。\n\n"
-                "---\n\n"
-                f"{index_entry}\n"
-                "---\n",
-                encoding="utf-8",
-            )
+        append_index_entry(index_file, index_entry)
 
         # 清除 draft，更新 last_session
         state["draft_summary"] = None
         state["last_session"] = now.isoformat()
-        STATE_FILE.write_text(
+        state_file.write_text(
             json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8"
         )
 
     except Exception:
         # 不静默失败 — 写错误日志
-        error_log = SKILL_DIR / "memory" / "hook_error.log"
+        error_log = skill_dir / "memory" / "hook_error.log"
+        error_log.parent.mkdir(parents=True, exist_ok=True)
         error_log.write_text(
             f"[{datetime.now().isoformat()}] Hook failed:\n"
             f"{traceback.format_exc()}\n",
