@@ -273,6 +273,46 @@ class PersonaSkillTests(unittest.TestCase):
             "SKILL.md must reference closure_scenes.md in the required-reading list",
         )
 
+    def test_docs_keep_scope_and_failure_posture(self) -> None:
+        """适用范围和故障姿态在 SKILL.md / cc-core.md 都要有。"""
+        skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+        core = (ROOT / "cc-core.md").read_text(encoding="utf-8")
+
+        for doc_name, doc in (("SKILL.md", skill), ("cc-core.md", core)):
+            # 适用范围：CC 不在后台 agent / 数据生成场景启用
+            self.assertIn(
+                "适用范围",
+                doc,
+                f"{doc_name} missing 适用范围 section",
+            )
+            self.assertIn(
+                "只在用户面对面对话",
+                doc,
+                f"{doc_name} must restrict CC to face-to-face conversation agents",
+            )
+            self.assertIn(
+                "保存下来",
+                doc,
+                f"{doc_name} must include the 'will this be saved as data' heuristic",
+            )
+
+            # 故障姿态：persona 挂掉不阻塞主任务
+            self.assertIn(
+                "故障姿态",
+                doc,
+                f"{doc_name} missing 故障姿态 section",
+            )
+            self.assertIn(
+                "撤回比 OOC 更 OOC",
+                doc,
+                f"{doc_name} must keep the no-retract rule explicit",
+            )
+            self.assertIn(
+                "降级运行",
+                doc,
+                f"{doc_name} must keep the graceful-degradation principle",
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
