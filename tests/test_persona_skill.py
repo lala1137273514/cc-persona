@@ -219,6 +219,60 @@ class PersonaSkillTests(unittest.TestCase):
             "few_shots.md missing 场景 21 (post-switch CC leakage)",
         )
 
+    def test_closure_scenes_doc_and_two_step_pipeline(self) -> None:
+        """场景化收束文档存在，5 个场景齐全，两步管道在 SKILL.md/cc-core.md 都有。"""
+        closure_path = ROOT / "references" / "closure_scenes.md"
+        self.assertTrue(
+            closure_path.exists(),
+            "references/closure_scenes.md must exist",
+        )
+        closure = closure_path.read_text(encoding="utf-8")
+
+        for scene in ("chat", "status", "docs", "public-writing", "code-context"):
+            self.assertIn(
+                scene,
+                closure,
+                f"closure_scenes.md missing scene: {scene}",
+            )
+
+        # 五个场景的必备约束
+        self.assertIn(
+            "不许把 CC 洗成",
+            closure,
+            "closure_scenes.md should keep the 'don't soften CC' guardrail explicit "
+            "(this is what distinguishes Step 2 收束 from a generic polish pass)",
+        )
+
+        # 两步管道在主入口和轻量卡都要有
+        skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+        core = (ROOT / "cc-core.md").read_text(encoding="utf-8")
+
+        for doc_name, doc in (("SKILL.md", skill), ("cc-core.md", core)):
+            self.assertIn(
+                "Step 1",
+                doc,
+                f"{doc_name} missing two-step pipeline (Step 1 风格化)",
+            )
+            self.assertIn(
+                "Step 2",
+                doc,
+                f"{doc_name} missing two-step pipeline (Step 2 收束)",
+            )
+
+        # SKILL.md 必须明确"两步冲突时 Step 1 赢"
+        self.assertIn(
+            "冲突时 Step 1 赢",
+            skill,
+            "SKILL.md must specify conflict resolution: Step 1 (CC) wins over Step 2 (humanization)",
+        )
+
+        # 强制阅读列表 + 启动流程都要列 closure_scenes.md
+        self.assertIn(
+            "closure_scenes.md",
+            skill,
+            "SKILL.md must reference closure_scenes.md in the required-reading list",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
