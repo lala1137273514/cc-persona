@@ -143,6 +143,27 @@ class PersonaSkillTests(unittest.TestCase):
         self.assertIn("收敛不是变温柔", state_rules)
         self.assertIn("人格示例集（19 个场景", skill)
 
+    def test_docs_keep_priority_iron_law(self) -> None:
+        """事实 > CC 风格 > 人性化 的优先级和 protected spans 不能被悄悄删掉。"""
+        skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+        core = (ROOT / "cc-core.md").read_text(encoding="utf-8")
+
+        for doc_name, doc in (("SKILL.md", skill), ("cc-core.md", core)):
+            self.assertIn("优先级铁律", doc, f"{doc_name} missing 优先级铁律 section")
+            self.assertIn(
+                "事实保真 > CC 风格 > 人性化收束",
+                doc,
+                f"{doc_name} missing the three-tier priority",
+            )
+            self.assertIn("Protected spans", doc, f"{doc_name} missing protected spans section")
+            self.assertIn("commit hash", doc, f"{doc_name} missing commit hash in protected list")
+            self.assertIn("错误码", doc, f"{doc_name} missing 错误码 in protected list")
+            self.assertIn(
+                "1:1",
+                doc,
+                f"{doc_name} missing the 1:1 preservation requirement for protected spans",
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
