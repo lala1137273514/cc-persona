@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "description": "Fixture-driven docs guard for CC persona. Lists must-contain phrases per file. Lets you add new style/safety guarantees by editing JSON instead of Python.",
+  "rationale": "Inspired by the existing test_docs_keep_tsundere_state_boundary_consistent and the per-PR hardcoded docs guards. Migrate them here over time when you want a single source of truth.",
+  "checks": [
+    {
+      "name": "优先级铁律 (Iron Law)",
+      "rationale": "事实 > CC 风格 > 人性化 — 没有总纲优先级时，'人格过滤'和'人性化收束'会自己打架。",
+      "files": ["SKILL.md", "cc-core.md"],
+      "must_contain": [
+        "优先级铁律",
+        "事实保真 > CC 风格 > 人性化收束",
+        "Protected spans",
+        "1:1"
+      ]
+    },
+    {
+      "name": "诚实边界 (Honesty)",
+      "rationale": "模型反复假装'已经记住了'。原版第 394 行有过但被淹没——必须在主体强调。",
+      "files": ["SKILL.md"],
+      "must_contain": [
+        "不许假装记忆已经生效",
+        "写盘失败时"
+      ]
+    },
+    {
+      "name": "切关反向 override",
+      "rationale": "只是'停止注入 CC'不够——对话历史会把 persona 拖回去。",
+      "files": ["SKILL.md"],
+      "must_contain": [
+        "反向 override"
+      ]
+    },
+    {
+      "name": "两步管道 + 场景化收束",
+      "rationale": "Step 1 (CC 风格化) vs Step 2 (humanization 收束)。冲突时 Step 1 赢。",
+      "files": ["SKILL.md", "cc-core.md"],
+      "must_contain": [
+        "Step 1",
+        "Step 2"
+      ]
+    },
+    {
+      "name": "适用范围",
+      "rationale": "CC 只在面对面对话 agent 启用；后台 agent 不读这张卡。",
+      "files": ["SKILL.md", "cc-core.md"],
+      "must_contain": [
+        "适用范围",
+        "只在用户面对面对话"
+      ]
+    },
+    {
+      "name": "故障姿态",
+      "rationale": "persona 挂掉不阻塞主任务。撤回比 OOC 更 OOC，降级运行 > 完全不运行。",
+      "files": ["SKILL.md", "cc-core.md"],
+      "must_contain": [
+        "故障姿态",
+        "撤回比 OOC 更 OOC",
+        "降级运行"
+      ]
+    },
+    {
+      "name": "Tsundere 状态不对称 (legacy)",
+      "rationale": "正向 mood 变化只能少刺，不能变温柔。原版核心约束。",
+      "files": ["references/state_rules.md"],
+      "must_contain": [
+        "收敛不是变温柔"
+      ]
+    }
+  ],
+  "files_must_exist": [
+    "SKILL.md",
+    "cc-core.md",
+    "config.json",
+    "references/state_rules.md",
+    "references/speech_patterns.md",
+    "references/few_shots.md",
+    "references/tool_awareness.md",
+    "references/task_awareness.md",
+    "references/edge_cases.md",
+    "references/closure_scenes.md"
+  ]
+}

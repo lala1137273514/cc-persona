@@ -273,6 +273,67 @@ class PersonaSkillTests(unittest.TestCase):
             "SKILL.md must reference closure_scenes.md in the required-reading list",
         )
 
+    def test_docs_contract_from_fixture(self) -> None:
+        """Fixture-driven docs guard. Add new must-contain phrases by editing
+        evals/docs_contract.json — no Python changes needed.
+
+        This test is additive: existing hardcoded docs tests (test_docs_keep_*)
+        stay in place. Migrate them to the fixture over time if you prefer a
+        single source of truth.
+        """
+        fixture_path = ROOT / "evals" / "docs_contract.json"
+        self.assertTrue(fixture_path.exists(), "evals/docs_contract.json missing")
+        fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(fixture.get("version"), 1, "unexpected fixture version")
+
+        # 1. Files must exist
+        for rel in fixture.get("files_must_exist", []):
+            path = ROOT / rel
+            self.assertTrue(path.exists(), f"required file missing: {rel}")
+
+        # 2. Each check: every file in `files` must contain every phrase in `must_contain`
+        for check in fixture.get("checks", []):
+            name = check.get("name", "<unnamed>")
+            phrases = check.get("must_contain", [])
+            for rel in check.get("files", []):
+                path = ROOT / rel
+                if not path.exists():
+                    self.fail(f"check '{name}': file does not exist: {rel}")
+                content = path.read_text(encoding="utf-8")
+                for phrase in phrases:
+                    self.assertIn(
+                        phrase,
+                        content,
+                        f"check '{name}': {rel} missing phrase: {phrase!r}",
+                    )
+
+    def test_humanizer_model_field_in_config(self) -> None:
+        """config.json 必须有 humanizer_model 字段（可为 null），允许宿主指定
+        独立的收束模型来降本。"""
+        config = json.loads((ROOT / "config.json").read_text(encoding="utf-8"))
+        self.assertIn(
+            "humanizer_model",
+            config,
+            "config.json must declare humanizer_model (null by default) so hosts "
+            "can opt into a cheaper Step 2 model",
+        )
+
+    def test_self_check_log_no_longer_required_to_write(self) -> None:
+        """SKILL.md 不再要求写入 _self_check_log；理由必须保留在文档里。"""
+        skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn(
+            "不写 log",
+            skill,
+            "SKILL.md must drop the _self_check_log write requirement",
+        )
+        self.assertIn(
+            "不可验证",
+            skill,
+            "SKILL.md must keep the rationale ('LLM 写 log 不可外部验证') so "
+            "future readers understand why this was removed",
+        )
+
     def test_docs_keep_scope_and_failure_posture(self) -> None:
         """适用范围和故障姿态在 SKILL.md / cc-core.md 都要有。"""
         skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")

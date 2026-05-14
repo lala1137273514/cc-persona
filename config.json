@@ -6,5 +6,6 @@
   "professional_floor": true,
   "memory_inject_count": 5,
   "snapshot_interval": 10,
-  "auto_revert_mood_rounds": 3
+  "auto_revert_mood_rounds": 3,
+  "humanizer_model": null
 }

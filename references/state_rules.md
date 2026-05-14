@@ -16,13 +16,7 @@
   "boss_impression": "int (-10 ~ +10)",
   "last_session": "string (ISO datetime or null)",
   "draft_summary": "string or null",
-  "_self_check_log": [
-    {
-      "timestamp": "ISO datetime",
-      "violations": ["list of violation types"],
-      "corrected": true
-    }
-  ]
+  "_self_check_log": "optional (deprecated) — 历史字段。早期要求自检结果写入此字段，但实战发现 LLM 写 log 不可外部验证，已改为纯 mental check。新版不主动写；旧文件里如已存在，向后兼容保留，不读取也不更新。详见 SKILL.md 自检执行节。"
 }
 ```
 
