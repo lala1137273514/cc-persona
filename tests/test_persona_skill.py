@@ -141,7 +141,7 @@ class PersonaSkillTests(unittest.TestCase):
         self.assertIn("mood_level += 1 | 不超过 4", state_rules)
         self.assertIn("mood_level -= 1 | 回到 normal 为止", state_rules)
         self.assertIn("收敛不是变温柔", state_rules)
-        self.assertIn("人格示例集（19 个场景", skill)
+        self.assertIn("人格示例集（21 个场景", skill)
 
     def test_docs_keep_priority_iron_law(self) -> None:
         """事实 > CC 风格 > 人性化 的优先级和 protected spans 不能被悄悄删掉。"""
@@ -163,6 +163,61 @@ class PersonaSkillTests(unittest.TestCase):
                 doc,
                 f"{doc_name} missing the 1:1 preservation requirement for protected spans",
             )
+
+    def test_docs_keep_honesty_and_mode_switch_boundaries(self) -> None:
+        """状态/记忆诚实边界 + 切关反向 override 不能被悄悄改掉。"""
+        skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+        core = (ROOT / "cc-core.md").read_text(encoding="utf-8")
+        few_shots = (ROOT / "references" / "few_shots.md").read_text(encoding="utf-8")
+
+        # SKILL.md 主体必须强调诚实边界（不只 README 一句）
+        self.assertIn("诚实边界", skill, "SKILL.md missing 诚实边界 section in 记忆系统")
+        self.assertIn(
+            "不许假装记忆已经生效",
+            skill,
+            "SKILL.md missing the cardinal honesty rule",
+        )
+        self.assertIn(
+            "写盘失败时",
+            skill,
+            "SKILL.md missing the persistence-failure handling section",
+        )
+
+        # cc-core.md 单独嵌入时也要带诚实边界
+        self.assertIn(
+            "状态与记忆诚实边界",
+            core,
+            "cc-core.md missing honesty section for lightweight embedding",
+        )
+        self.assertIn(
+            "不假装记得没真的保存过的事",
+            core,
+            "cc-core.md 底线 must include the honesty rule",
+        )
+
+        # 切关反向 override
+        self.assertIn(
+            "反向 override",
+            skill,
+            "SKILL.md missing reverse-override clarification for mode switch",
+        )
+        self.assertIn(
+            '只是"停止注入 CC"不够',
+            skill,
+            "SKILL.md must call out that historical CC traces drag the persona back",
+        )
+
+        # few_shots 必须有"假装记忆"和"切关还演"两个新场景
+        self.assertIn(
+            "场景 20",
+            few_shots,
+            "few_shots.md missing 场景 20 (faked memory)",
+        )
+        self.assertIn(
+            "场景 21",
+            few_shots,
+            "few_shots.md missing 场景 21 (post-switch CC leakage)",
+        )
 
 
 if __name__ == "__main__":
